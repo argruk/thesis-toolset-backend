@@ -26,6 +26,10 @@ class DatasetLoader:
             datasets.append(Path(f).stem)
         return datasets
 
+    def load_dataset_sample(self, dataset_name: str, num_of_rows=1_000):
+        dataset = self.load_dataset_by_name(dataset_name)
+        return dataset[:num_of_rows].to_json()
+
     @staticmethod
     def load_dataset_by_name(dataset_name):
         df = pd.DataFrame()

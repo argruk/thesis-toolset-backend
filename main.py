@@ -4,12 +4,14 @@ import aiohttp
 import uvicorn
 import json
 from pydantic import BaseModel
+
 from typing import Union
 
 from Helpers.AlgorithmRunner import AlgorithmHelper
 from Helpers.CumulocityFetcher import CumulocityFetcher
 from Helpers.DatasetLoader import DatasetLoader
 from Helpers.NotificationFetcher import NotificationFetcher
+from Helpers.RabbitMQClient import RabbitMQClient
 
 
 class Body(BaseModel):
@@ -154,8 +156,23 @@ async def save_current_dataset():
 @app.get("/dataset/all")
 async def get_all_present_datasets():
     loader = DatasetLoader("./SavedDatasets")
-    loader.load_dataset_list()
     return loader.load_dataset_list()
+
+@app.get("/dataset/sample")
+async def get_dataset_sample(dataset_name: str):
+    loader = DatasetLoader("./SavedDatasets")
+    return loader.load_dataset_sample()
+
+
+class NewDatasetType(BaseModel):
+    filename: str
+    date_from: str
+    date_to: str
+
+@app.post("/jobs/new/dataset")
+async def create_new_dataset_job(body: NewDatasetType):
+    mq_client = RabbitMQClient("new/dataset")
+    mq_client.send_message(RabbitMQClient.prepare_new_dataset_obj(body.filename, body.date_from, body.date_to))
 
 
 def RecursiveDeviceTree(device_id: str, device_name: str, conn: CumulocityFetcher):

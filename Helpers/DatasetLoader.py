@@ -26,21 +26,20 @@ class DatasetLoader:
             datasets.append(Path(f).stem)
         return datasets
 
-    def load_dataset_sample(self, dataset_name: str, num_of_rows=1_000):
+    def load_dataset_sample(self, dataset_name: str, num_of_rows=100):
         dataset = self.load_dataset_by_name(dataset_name)
         return dataset[:num_of_rows].to_json()
 
     @staticmethod
-    def load_dataset_by_name(dataset_name):
+    def load_dataset_by_name(dataset_name) -> pd.DataFrame:
         df = pd.DataFrame()
         with open(f"SavedDatasets/{dataset_name}.csv", "r") as f:
-            df = pd.read_csv(f)
-
+            df = pd.read_csv(f, parse_dates=['time'])
         return df
 
     @staticmethod
-    def save_current_dataset_state(dataset_name, dataset: pd.DataFrame, add_index=False, as_json=False):
+    def save_current_dataset_state(dataset_name, dataset: pd.DataFrame, destination_folder="SavedDatasets", add_index=False, as_json=False):
         if as_json:
-            dataset.to_json(f"SavedDatasets/{dataset_name}.json", index=add_index)
+            dataset.to_json(f"{destination_folder}/{dataset_name}.json", index=add_index)
         else:
-            dataset.to_csv(f"SavedDatasets/{dataset_name}.csv", index=add_index)
+            dataset.to_csv(f"{destination_folder}/{dataset_name}.csv", index=add_index)

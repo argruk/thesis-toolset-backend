@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from typing import Union
 
+from Controllers import DatasetOperationsController
 from Helpers.AlgorithmRunner import AlgorithmHelper
 from Helpers.CumulocityFetcher import CumulocityFetcher
 from Helpers.DatasetLoader import DatasetLoader
@@ -27,6 +28,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(DatasetOperationsController.router)
 
 f = open('credentials.json')
 credentials = json.load(f)
@@ -161,7 +164,7 @@ async def get_all_present_datasets():
 @app.get("/dataset/sample")
 async def get_dataset_sample(dataset_name: str):
     loader = DatasetLoader("./SavedDatasets")
-    return loader.load_dataset_sample()
+    return loader.load_dataset_sample(dataset_name)
 
 
 class NewDatasetType(BaseModel):
@@ -172,6 +175,7 @@ class NewDatasetType(BaseModel):
 @app.post("/jobs/new/dataset")
 async def create_new_dataset_job(body: NewDatasetType):
     mq_client = RabbitMQClient("new/dataset")
+    print(body)
     mq_client.send_message(RabbitMQClient.prepare_new_dataset_obj(body.filename, body.date_from, body.date_to))
 
 

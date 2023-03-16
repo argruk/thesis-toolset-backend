@@ -38,6 +38,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\SavedDatasets\test_set.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\SavedDatasets\test_set_before_group.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

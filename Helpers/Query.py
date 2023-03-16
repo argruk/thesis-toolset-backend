@@ -4,6 +4,9 @@ from typing import Union
 
 
 # Custom query may be added by extending this class with a custom query
+from Helpers.DatasetLoader import DatasetLoader
+
+
 class Query:
     def __init__(self, dataset: DataFrame):
         self.dataset: DataFrame = dataset
@@ -24,9 +27,11 @@ class Query:
         if measurement_type is not None: self.filter_by("fragment.series", measurement_type)
 
         self.select_columns(["time", "fragment.series", "value"])
+        pd.to_datetime(self.dataset['time'])
         self.dataset.set_index(["time", "fragment.series"], inplace=True, drop=True)
-        grouping_in_progress = self.dataset.groupby(
-            [pd.Grouper(freq=window, level="time"), pd.Grouper(level="fragment.series")])
+        # DatasetLoader.save_current_dataset_state("test_set_before_group", self.dataset, add_index=True)
+        grouping_in_progress = self.dataset.asfreq(window).groupby(
+            [pd.Grouper(freq=window, level="time", dropna=False), "fragment.series"], dropna=False)
         if group_type == "mean":
             self.dataset = grouping_in_progress.mean()
         elif group_type == "sum":

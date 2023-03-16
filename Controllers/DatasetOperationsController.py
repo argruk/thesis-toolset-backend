@@ -41,9 +41,10 @@ async def window_dataset(dataset_name: str, window: str, measurement_type: Union
     query = QueryDataset(loader.load_dataset_by_name(dataset_name))
     parsed_measurement_type = None
     if measurement_type is not None:
-        print(measurement_type)
         parsed_measurement_type = json.loads(measurement_type)
     query.select_time_window_for_column(window, parsed_measurement_type, group_type)
+
+    DatasetLoader.save_current_dataset_state("test_set", query.dataset)
     return json.loads(query.dataset.to_json())
 
 

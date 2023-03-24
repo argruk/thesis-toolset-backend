@@ -28,20 +28,34 @@ class Query:
 
         self.select_columns(["time", "fragment.series", "value"])
         pd.to_datetime(self.dataset['time'])
+
         self.dataset.set_index(["time", "fragment.series"], inplace=True, drop=True)
         # DatasetLoader.save_current_dataset_state("test_set_before_group", self.dataset, add_index=True)
-        grouping_in_progress = self.dataset.asfreq(window).groupby(
+        grouping_in_progress = self.dataset.groupby(
             [pd.Grouper(freq=window, level="time", dropna=False), "fragment.series"], dropna=False)
+        print(len(measurement_type))
         if group_type == "mean":
             self.dataset = grouping_in_progress.mean()
+            # def resampler(x):
+                # return x.set_index('time').resample(window).mean().rolling(window=len(measurement_type)).mean()
         elif group_type == "sum":
             self.dataset = grouping_in_progress.sum()
+            # def resampler(x):
+                # return x.set_index('time').resample(window).sum().rolling(window=len(measurement_type)).sum()
         elif group_type == "min":
             self.dataset = grouping_in_progress.min()
+            # def resampler(x):
+                # return x.set_index('time').resample(window).min().rolling(window=len(measurement_type)).min()
         elif group_type == "max":
             self.dataset = grouping_in_progress.max()
+            # def resampler(x):
+                # return x.set_index('time').resample(window).max().rolling(window=len(measurement_type)).max()
         elif group_type is None:
             self.dataset = grouping_in_progress.count()
+            # def resampler(x):
+            #     return x.set_index('time').resample(window).count().rolling(window=len(measurement_type)).count()
+
+        # self.dataset.reset_index(level=0).groupby('fragment.series').apply(resampler)
 
         self.dataset.reset_index(inplace=True)
 

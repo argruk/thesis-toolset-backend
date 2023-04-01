@@ -2,7 +2,6 @@ from pandas import DataFrame
 import pandas as pd
 from typing import Union
 
-
 # Custom query may be added by extending this class with a custom query
 from Helpers.DatasetLoader import DatasetLoader
 
@@ -29,35 +28,29 @@ class Query:
         self.select_columns(["time", "fragment.series", "value"])
         pd.to_datetime(self.dataset['time'])
 
+        testdf_dates = pd.date_range(start=self.dataset.head(1)['time'].values[0], end=self.dataset.tail(1)['time'].values[0], freq=window).tz_localize('UTC').floor(window)
+        index = pd.MultiIndex.from_product([list(testdf_dates), measurement_type], names=['time', 'fragment.series'])
+        testdf = DataFrame(columns=['value'], index=index)
+
         self.dataset.set_index(["time", "fragment.series"], inplace=True, drop=True)
-        # DatasetLoader.save_current_dataset_state("test_set_before_group", self.dataset, add_index=True)
         grouping_in_progress = self.dataset.groupby(
             [pd.Grouper(freq=window, level="time", dropna=False), "fragment.series"], dropna=False)
-        print(len(measurement_type))
         if group_type == "mean":
             self.dataset = grouping_in_progress.mean()
-            # def resampler(x):
-                # return x.set_index('time').resample(window).mean().rolling(window=len(measurement_type)).mean()
         elif group_type == "sum":
             self.dataset = grouping_in_progress.sum()
-            # def resampler(x):
-                # return x.set_index('time').resample(window).sum().rolling(window=len(measurement_type)).sum()
         elif group_type == "min":
             self.dataset = grouping_in_progress.min()
-            # def resampler(x):
-                # return x.set_index('time').resample(window).min().rolling(window=len(measurement_type)).min()
         elif group_type == "max":
             self.dataset = grouping_in_progress.max()
-            # def resampler(x):
-                # return x.set_index('time').resample(window).max().rolling(window=len(measurement_type)).max()
         elif group_type is None:
             self.dataset = grouping_in_progress.count()
-            # def resampler(x):
-            #     return x.set_index('time').resample(window).count().rolling(window=len(measurement_type)).count()
+        testdf.loc[self.dataset.index.to_native_types(), ['value']] = self.dataset.values
+        DatasetLoader.save_current_dataset_state('test1', testdf, add_index=True)
 
-        # self.dataset.reset_index(level=0).groupby('fragment.series').apply(resampler)
+        testdf.reset_index(inplace=True)
 
-        self.dataset.reset_index(inplace=True)
+        self.dataset = testdf
 
     def group_by(self, column_name: str, group_type: Union[str, None]):
         if group_type == "mean":

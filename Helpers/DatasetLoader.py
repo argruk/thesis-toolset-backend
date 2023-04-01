@@ -1,4 +1,5 @@
 import glob
+import os
 import pandas as pd
 from pathlib import Path
 
@@ -33,6 +34,10 @@ class DatasetLoader:
     @staticmethod
     def load_dataset_by_name(dataset_name) -> pd.DataFrame:
         df = pd.DataFrame()
+
+        if not os.path.exists(f"SavedDatasets/{dataset_name}.csv"):
+            return df
+
         with open(f"SavedDatasets/{dataset_name}.csv", "r") as f:
             df = pd.read_csv(f, parse_dates=['time'])
         return df

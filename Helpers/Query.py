@@ -28,7 +28,9 @@ class Query:
         self.select_columns(["time", "fragment.series", "value"])
         pd.to_datetime(self.dataset['time'])
 
-        testdf_dates = pd.date_range(start=self.dataset.head(1)['time'].values[0], end=self.dataset.tail(1)['time'].values[0], freq=window).tz_localize('UTC').floor(window)
+        testdf_dates = pd.date_range(start=self.dataset.head(1)['time'].values[0],
+                                     end=self.dataset.tail(1)['time'].values[0], freq=window).tz_localize('UTC').floor(
+            window)
         index = pd.MultiIndex.from_product([list(testdf_dates), measurement_type], names=['time', 'fragment.series'])
         testdf = DataFrame(columns=['value'], index=index)
 
@@ -61,5 +63,26 @@ class Query:
             self.dataset = self.dataset.groupby(column_name).min()
         elif group_type == "max":
             self.dataset = self.dataset.groupby(column_name).max()
+        elif group_type == "mt" and column_name == 'device_name':
+            self.dataset = self.__group_by_mt_ext()
+        elif group_type == "mt" and column_name == 'fragment.series':
+            self.dataset = self.__group_by_mt_ext_reverse()
         elif group_type is None:
             self.dataset = self.dataset.groupby(column_name)[column_name].count()
+
+    def __group_by_mt_ext(self):
+        grouped_dataset = DataFrame(self.dataset.groupby(['source', 'device_name'])['fragment.series'].apply(lambda y: ', '.join(y.unique())))
+        grouped_dataset.reset_index(inplace=True)
+        grouped_dataset['device'] = grouped_dataset['device_name'] + '(' + grouped_dataset['source'].astype(str) + ')'
+        grouped_dataset = grouped_dataset[['device', 'fragment.series']]
+        grouped_dataset.set_index('device', inplace=True, drop=True)
+        return grouped_dataset['fragment.series']
+
+    @staticmethod
+    def __y_ext_1(y):
+        y['device'] = y['device_name'] + '(' + y['source'].astype(str) + ')'
+        return ', '.join(y[['fragment.series', 'device']]['device'].unique())
+
+    def __group_by_mt_ext_reverse(self):
+        grouped_dataset = DataFrame(self.dataset.groupby('fragment.series')['fragment.series', 'source', 'device_name'].apply(lambda y: self.__y_ext_1(y)), columns=['device_name'])
+        return grouped_dataset['device_name']

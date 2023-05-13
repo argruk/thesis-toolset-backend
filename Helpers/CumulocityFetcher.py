@@ -31,7 +31,8 @@ class CumulocityFetcher:
                                        f"dateTo={date_to}"), headers=self.headers) \
             .json()
 
-        print(resp["statistics"]["totalPages"])
+        print(resp["statistics"])
+
         current_page = 1
         while "measurements" in resp and len(resp["measurements"]) is not 0:
             measurements += resp["measurements"]

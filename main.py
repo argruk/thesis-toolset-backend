@@ -136,11 +136,12 @@ async def get_all_algorithms():
     return runner.GetAvailableAlgorithms()
 
 
-@app.get("/algorithms/module")
-async def get_algorithm_module(algorithm_name: str, save_as: str, body: Body):
+@app.post("/algorithms/run")
+async def run_algorithm(algorithm_name: str, dataset_name: str, save_as: str, body: Body):
     runner = AlgorithmHelper()
-    DatasetLoader.save_current_dataset_state(save_as, runner.GetAlgorithmAsModule(algorithm_name, body), False)
-    return None
+    print(body)
+    DatasetLoader.save_current_dataset_state(save_as, runner.RunAlgorithm(algorithm_name, dataset_name, body))
+    return "completed"
 
 
 @app.get("/algorithms/parameters")
@@ -171,13 +172,15 @@ class NewDatasetType(BaseModel):
     filename: str
     date_from: str
     date_to: str
+    mt: Union[str, None]
 
 @app.post("/jobs/new/dataset")
 async def create_new_dataset_job(body: NewDatasetType):
     mq_client = RabbitMQClient("new/dataset")
-    print(body)
-    mq_client.send_message(RabbitMQClient.prepare_new_dataset_obj(body.filename, body.date_from, body.date_to))
-
+    if body.mt is not None:
+        mq_client.send_message(RabbitMQClient.prepare_new_dataset_obj_with_mt(body.filename, body.date_from, body.date_to, body.mt))
+    else:
+        mq_client.send_message(RabbitMQClient.prepare_new_dataset_obj(body.filename, body.date_from, body.date_to))
 
 def RecursiveDeviceTree(device_id: str, device_name: str, conn: CumulocityFetcher):
     children = conn.get_device_children(device_id)['references']

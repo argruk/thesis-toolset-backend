@@ -29,8 +29,8 @@ class Query:
         pd.to_datetime(self.dataset['time'])
 
         testdf_dates = pd.date_range(start=self.dataset.head(1)['time'].values[0],
-                                     end=self.dataset.tail(1)['time'].values[0], freq=window).tz_localize('UTC').floor(
-            window)
+                                     end=self.dataset.tail(1)['time'].values[0], freq=window).tz_localize('UTC').floor(window)
+        testdf_dates = testdf_dates.append(pd.DatetimeIndex([pd.Timestamp(testdf_dates[len(testdf_dates)-1]) + pd.Timedelta(window)]))
         index = pd.MultiIndex.from_product([list(testdf_dates), measurement_type], names=['time', 'fragment.series'])
         testdf = DataFrame(columns=['value'], index=index)
 
@@ -47,6 +47,7 @@ class Query:
             self.dataset = grouping_in_progress.max()
         elif group_type is None:
             self.dataset = grouping_in_progress.count()
+
         testdf.loc[self.dataset.index.to_native_types(), ['value']] = self.dataset.values
         DatasetLoader.save_current_dataset_state('test1', testdf, add_index=True)
 

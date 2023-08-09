@@ -7,7 +7,6 @@ import importlib
 from Algorithms.SystemClasses.DatasetParam import DatasetParam
 from Helpers.DatasetLoader import DatasetLoader
 
-
 class AlgorithmHelper:
     @staticmethod
     def GetEnumValues(enum: Enum):
@@ -18,14 +17,12 @@ class AlgorithmHelper:
         algorithms = [f.split("\\")[1] for f in res]
         return [self.TrimFileExtension(alg) for alg in algorithms]
 
-    def GetAlgorithmAsModule(self, filename, body):
+    def RunAlgorithm(self, filename, datasetName, body):
         module = importlib.import_module(f"Algorithms.{self.TrimFileExtension(filename)}")
         members = inspect.getmembers(sys.modules[module.__name__], inspect.isclass)
         found_class = list(filter(lambda x: x[0] == self.TrimFileExtension(filename), members))[0][1]
 
-        dataset = DatasetLoader.load_dataset_by_name("dataset1")
-
-        print(dataset)
+        dataset = DatasetLoader.load_dataset_by_name(datasetName)
         parameters = {"dataset": DatasetParam(dataset), **body.parameters}
         instance = found_class(**parameters)
 

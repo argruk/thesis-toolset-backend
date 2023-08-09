@@ -10,3 +10,4 @@ class MinMaxNormalizer:
         x = self.column_name
         self.dataset[self.column_name] = (d[x] - d[x].min())/(d[x].max() - d[x].min())
         return self.dataset
+
